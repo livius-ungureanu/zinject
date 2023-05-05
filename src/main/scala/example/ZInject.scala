@@ -21,6 +21,8 @@ import zio.http.Status.InternalServerError
 import zio.json._
 import zio.http.Status
 import example.SubscriberCsv
+import zio.http.netty.NettyConfig
+import zio.http.netty.client.NettyClientDriver
 
 object ZInject extends ZIOAppDefault {
 
@@ -81,7 +83,16 @@ object ZInject extends ZIOAppDefault {
     } yield ()
   }
 
-  def run = program.provideSomeLayer[ZIOAppArgs](Client.default.map { env =>
+  val clientLayer = (
+    (
+        DnsResolver.default ++
+        (ZLayer.succeed(NettyConfig.default) >>> NettyClientDriver.live) ++
+        ZLayer.succeed(Client.Config.default.withFixedConnectionPool(10))
+    ) >>> Client.customized
+  )
+
+  def run = program.provideSomeLayer[ZIOAppArgs](clientLayer.map { env =>
     ZEnvironment(env.get.withDisabledStreaming)
   })
+
 }
