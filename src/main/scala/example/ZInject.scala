@@ -89,7 +89,7 @@ object ZInject extends ZIOAppDefault {
         (ZLayer.succeed(NettyConfig.default) >>> NettyClientDriver.live) ++
         ZLayer.succeed(Client.Config.default.withFixedConnectionPool(10))
     ) >>> Client.customized
-  )
+  ).fresh
 
   def run = program.provideSomeLayer[ZIOAppArgs](clientLayer.map { env =>
     ZEnvironment(env.get.withDisabledStreaming)
